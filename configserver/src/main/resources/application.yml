@@ -1,0 +1,19 @@
+#server:
+#  port: 8080
+#
+#spring:
+#  application:
+#    name: configserver
+#
+#  cloud:
+#    config:
+#      server:
+#        git:
+#          uri: https://github.com/success-glich/config-server.git
+#
+#eureka:
+#  client:
+#    service-url:
+#      defaultZone: http://configserver/eureka/
+#
+#

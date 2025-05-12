@@ -1,0 +1,141 @@
+services:
+  company-db:
+    image: postgres:15
+    container_name: company-db
+    environment:
+      POSTGRES_DB: company_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+    ports:
+      - "5432:5432"
+    volumes:
+      - company_db_data:/var/lib/postgresql/data
+    networks:
+      - microservices-network
+      -
+  # PostgreSQL for Jobs Service
+  jobs-db:
+    image: postgres:15
+    container_name: jobs-db
+    environment:
+      POSTGRES_DB: job_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+    ports:
+      - "5433:5432"  # Different host port
+    volumes:
+      - jobs_db_data:/var/lib/postgresql/data
+    networks:
+      - microservices-network
+  reviews-db:
+    image: postgres:15
+    container_name: reviews-db
+    environment:
+      POSTGRES_DB: review_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+    ports:
+      - "5434:5432"
+    volumes:
+      - reviews_db_data:/var/lib/postgresql/data
+    networks:
+      - microservices-network
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin123
+    networks:
+      - microservices-network
+
+  servicereg:
+    build: service-reg
+    container_name: service-registry
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - microservices-network
+
+  configserver:
+    build: configserver
+    container_name: config-server
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://servicereg:8761/eureka/
+
+    networks:
+      - microservices-network
+    depends_on:
+      - servicereg
+
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - microservices-network
+
+  job-service:
+    build: jobMs
+    container_name: job-service
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - COMPANY_SERVICE_URL=http://company-service:8082/companies
+      - REVIEWS_SERVICE_URL=http://reviews-service:8083
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://jobs-db:5432/job_db
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin123
+      - SPRING_DATASOURCE_DRIVER-CLASS-NAME=org.postgresql.Driver
+    networks:
+      - microservices-network
+    depends_on:
+      - company-db
+
+  reviews-service:
+    build: review
+    container_name: reviews-service
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+#      - COMPANY_SERVICE_URL=http://company-service:8082
+#      - SPRING_DATASOURCE_URL=jdbc:postgresql://reviews-db:5432/review_db
+#      - SPRING_DATASOURCE_USERNAME=admin
+#      - SPRING_DATASOURCE_PASSWORD=admin123
+#      - SPRING_DATASOURCE_DRIVER-CLASS-NAME=org.postgresql.Driver
+    depends_on:
+      - company-service
+    networks:
+      - microservices-network
+
+  company-service:
+    build: companyms
+    container_name: company-service
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+    networks:
+      - microservices-network
+
+volumes:
+  company_db_data:
+  jobs_db_data:
+  reviews_db_data:
+
+networks:
+  microservices-network:
+    driver: bridge

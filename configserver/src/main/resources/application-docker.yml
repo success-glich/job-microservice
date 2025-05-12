@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: configserver
+
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/success-glich/config-server.git
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://servicereg:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+    hostname: config-server
+
+server:
+  port: 8080
