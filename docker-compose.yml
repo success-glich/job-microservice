@@ -26,6 +26,12 @@ services:
       - jobs_db_data:/var/lib/postgresql/data
     networks:
       - microservices-network
+  consul:
+    image: consul:1.14.5
+    container_name: consul
+    ports:
+      - "8500:8500"
+    command: "consul agent -dev -client=0.0.0.0"
   reviews-db:
     image: postgres:15
     container_name: reviews-db
@@ -37,6 +43,20 @@ services:
       - "5434:5432"
     volumes:
       - reviews_db_data:/var/lib/postgresql/data
+    networks:
+      - microservices-network
+
+  user-db:
+    image: postgres:15
+    container_name: user-db
+    environment:
+      POSTGRES_DB: user_db
+      POSTGRES_USER: userdb
+      POSTGRES_PASSWORD: user123
+    ports:
+      - "5435:5432"
+    volumes:
+      - user_db_data:/var/lib/postgresql/data
     networks:
       - microservices-network
   rabbitmq:
@@ -134,7 +154,7 @@ volumes:
   company_db_data:
   jobs_db_data:
   reviews_db_data:
-
+  user_db_data:
 networks:
   microservices-network:
     driver: bridge

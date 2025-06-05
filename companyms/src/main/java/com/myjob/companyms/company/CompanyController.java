@@ -3,6 +3,8 @@ package com.myjob.companyms.company;
 
 import com.myjob.companyms.company.dto.CompanyRequest;
 import com.myjob.companyms.company.utils.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -13,12 +15,14 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/companies")
+@Tag(name = "Company Management", description = "APIs for managing companies")
 public class CompanyController {
 
     @Autowired
     private CompanyService companyService;
 
     @GetMapping
+    @Operation(summary = "Get All Companies", description = "Fetches a list of all companies")
     public ResponseEntity<ApiResponse<List<Company>>> getAllCompanies() {
         List<Company> allCompanies = companyService.getAllCompanies();
         return ResponseEntity.ok(new ApiResponse<>(true,"All companies fetched successfully.",allCompanies));
